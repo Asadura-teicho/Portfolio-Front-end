@@ -45,29 +45,67 @@
 //   }
 // }
 
+
+
+// ------------------------------------------------------------------------------
+
+// import { NextResponse } from 'next/server'
+
+// export function middleware(request) {
+//   const token = request.cookies.get('accessToken')?.value
+//   const isAdmin = request.cookies.get('isAdmin')?.value === 'true'
+//   const url = request.nextUrl.clone()
+
+//   const nextParam = encodeURIComponent(`${url.pathname}${url.search}`)
+
+//   // Protect admin routes
+//   if (url.pathname.startsWith('/admin')) {
+//     // Not logged in
+//     if (!token) {
+//       return NextResponse.redirect(new URL(`/auth/login?next=${nextParam}`, request.url))
+//     }
+
+//     // Logged in but not admin
+//     if (!isAdmin) {
+//       return NextResponse.redirect(new URL('/dashboard', request.url))
+//     }
+//   }
+
+//   // Protect dashboard routes
+//   if (url.pathname.startsWith('/dashboard') && !token) {
+//     return NextResponse.redirect(new URL(`/auth/login?next=${nextParam}`, request.url))
+//   }
+
+//   return NextResponse.next()
+// }
+
+// // Match all pages except API/static
+// export const config = {
+//   matcher: [
+//     '/((?!api|_next/static|_next/image|favicon.ico).*)',
+//   ],
+// }
 import { NextResponse } from 'next/server'
 
 export function middleware(request) {
-  const token = request.cookies.get('accessToken')?.value
+  // Use optional chaining and default values
+  const token = request.cookies.get('accessToken')?.value || null
   const isAdmin = request.cookies.get('isAdmin')?.value === 'true'
-  const url = request.nextUrl.clone()
 
+  const url = request.nextUrl.clone()
   const nextParam = encodeURIComponent(`${url.pathname}${url.search}`)
 
-  // Protect admin routes
+  // Admin routes
   if (url.pathname.startsWith('/admin')) {
-    // Not logged in
     if (!token) {
       return NextResponse.redirect(new URL(`/auth/login?next=${nextParam}`, request.url))
     }
-
-    // Logged in but not admin
     if (!isAdmin) {
       return NextResponse.redirect(new URL('/dashboard', request.url))
     }
   }
 
-  // Protect dashboard routes
+  // Dashboard routes
   if (url.pathname.startsWith('/dashboard') && !token) {
     return NextResponse.redirect(new URL(`/auth/login?next=${nextParam}`, request.url))
   }
@@ -75,7 +113,6 @@ export function middleware(request) {
   return NextResponse.next()
 }
 
-// Match all pages except API/static
 export const config = {
   matcher: [
     '/((?!api|_next/static|_next/image|favicon.ico).*)',
