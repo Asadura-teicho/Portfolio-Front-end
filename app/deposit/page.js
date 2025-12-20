@@ -278,14 +278,15 @@ import Link from 'next/link'
 import { useTranslation } from '@/hooks/useTranslation'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import { paymentAPI, authAPI, publicAPI } from '@/lib/api'
+import UserSidebar from '@/components/UserSidebar'
 
 function DepositPage() {
   const { t } = useTranslation()
   const router = useRouter()
 
   // UI state
-  const [selectedMethod, setSelectedMethod] = useState('Banka Havalesi')
-  const [amount, setAmount] = useState('0.00')
+  const [selectedMethod, setSelectedMethod] = useState('')
+  const [amount, setAmount] = useState('')
   const quickAmounts = ['100₺', '250₺', '500₺']
 
   // data
@@ -316,10 +317,11 @@ function DepositPage() {
         if (methodsRes.status === 'fulfilled') {
           // support both { methods } and direct array
           const m = methodsRes.value.data?.methods ?? methodsRes.value.data ?? []
-          setPaymentMethods(Array.isArray(m) ? m : [])
+          const methodsArray = Array.isArray(m) ? m : []
+          setPaymentMethods(methodsArray)
           // set default selected method if not present
-          if ((Array.isArray(m) && m.length > 0) && !paymentMethods.length) {
-            const defaultName = m[0].name || m[0].id
+          if (methodsArray.length > 0 && !selectedMethod) {
+            const defaultName = methodsArray[0].name || methodsArray[0].id
             setSelectedMethod(defaultName)
           }
         }
@@ -374,13 +376,15 @@ function DepositPage() {
     setAmount(numericAmount)
   }
 
-  const handleDeposit = async () => {
-    if (!amount || parseFloat(amount) <= 0) {
+  const handleDeposit = async (e) => {
+    if (e) e.preventDefault()
+    
+    if (!amount || parseFloat(amount) <= 0 || isNaN(parseFloat(amount))) {
       setError('Lütfen geçerli bir tutar girin')
       return
     }
 
-    if (!selectedMethodData) {
+    if (!selectedMethodData || !selectedMethod) {
       setError('Lütfen bir ödeme yöntemi seçin')
       return
     }
@@ -429,11 +433,11 @@ function DepositPage() {
   }
 
   return (
-    <div className="relative flex h-auto min-h-screen w-full flex-col overflow-x-hidden font-display bg-background-light dark:bg-background-dark text-text-light">
-      <div className="layout-container flex h-full grow flex-col">
-        <div className="px-4 sm:px-8 md:px-16 lg:px-24 xl:px-40 flex flex-1 justify-center py-5">
-          <div className="layout-content-container flex flex-col max-w-6xl flex-1">
-
+    <div className="flex min-h-screen bg-background-light dark:bg-background-dark font-display text-[#EAEAEA]">
+      <UserSidebar />
+      <div className="flex-1 flex flex-col ml-0 lg:ml-64">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+          <div className="max-w-6xl mx-auto">
             <main className="flex-grow pt-8 sm:pt-12 pb-12">
               {/* PageHeading */}
               <div className="flex flex-wrap justify-between gap-4 p-4">
@@ -449,8 +453,13 @@ function DepositPage() {
                 <div className="lg:col-span-2">
                   <h2 className="text-white text-xl sm:text-[22px] font-bold leading-tight tracking-[-0.015em] mb-4">{t('common.paymentMethods')}</h2>
                   {/* ImageGrid */}
-                  <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
-                    {paymentMethods.map((method) => (
+                  {paymentMethods.length === 0 ? (
+                    <div className="text-center py-8">
+                      <p className="text-text-dark">Ödeme yöntemleri yükleniyor...</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+                      {paymentMethods.map((method) => (
                       <div
                         key={method.id || method.name}
                         onClick={() => setSelectedMethod(method.name || method.id)}
@@ -460,16 +469,23 @@ function DepositPage() {
                             : 'border-border-dark hover:border-primary/50'
                         }`}
                       >
-                        <div className="w-full bg-center bg-no-repeat aspect-video bg-cover rounded-lg bg-white p-2">
-                          <img alt={method.name} className="w-full h-full object-contain" src={method.image} />
-                        </div>
+                        {method.image && (
+                          <div className="w-full bg-center bg-no-repeat aspect-video bg-cover rounded-lg bg-white p-2">
+                            <img alt={method.name || 'Payment method'} className="w-full h-full object-contain" src={method.image} onError={(e) => { e.target.style.display = 'none' }} />
+                          </div>
+                        )}
                         <div>
-                          <p className="text-white text-base font-medium leading-normal">{method.name}</p>
-                          <p className="text-text-dark text-sm font-normal leading-normal">{t('common.min')}: {method.min} / {t('common.max')}: {method.max}</p>
+                          <p className="text-white text-base font-medium leading-normal">{method.name || method.id}</p>
+                          <p className="text-text-dark text-sm font-normal leading-normal">
+                            {method.min && `${t('common.min') || 'Min'}: ${method.min}`}
+                            {method.min && method.max && ' / '}
+                            {method.max && `${t('common.max') || 'Max'}: ${method.max}`}
+                          </p>
                         </div>
                       </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 {/* Right Column: Deposit Form */}
@@ -478,52 +494,31 @@ function DepositPage() {
                     <h2 className="text-white text-xl sm:text-[22px] font-bold leading-tight tracking-[-0.015em] mb-4">{t('common.depositDetails')}</h2>
 
                     {/* ListItem */}
-                    <div className="flex items-center gap-4 bg-background-dark px-4 py-3 min-h-14 justify-between rounded-lg border border-border-dark">
-                      <div className="flex items-center gap-4">
-                        <div className="bg-center bg-no-repeat aspect-square bg-cover rounded-lg size-10 bg-white p-1">
-                          <img alt={selectedMethodData?.name} className="w-full h-full object-contain" src={selectedMethodData?.image} />
+                    {selectedMethodData ? (
+                      <div className="flex items-center gap-4 bg-background-dark px-4 py-3 min-h-14 justify-between rounded-lg border border-border-dark">
+                        <div className="flex items-center gap-4">
+                          {selectedMethodData.image && (
+                            <div className="bg-center bg-no-repeat aspect-square bg-cover rounded-lg size-10 bg-white p-1">
+                              <img alt={selectedMethodData.name} className="w-full h-full object-contain" src={selectedMethodData.image} />
+                            </div>
+                          )}
+                          <p className="text-white text-base font-normal leading-normal flex-1 truncate">{selectedMethodData.name || selectedMethod}</p>
                         </div>
-                        <p className="text-white text-base font-normal leading-normal flex-1 truncate">{selectedMethodData?.name ?? selectedMethod}</p>
+                        <div className="shrink-0">
+                          <button
+                            onClick={() => setSelectedMethod('')}
+                            type="button"
+                            className="text-primary text-sm font-medium leading-normal hover:underline"
+                          >
+                            {t('common.change')}
+                          </button>
+                        </div>
                       </div>
-                      <div className="shrink-0">
-                        <button
-                          onClick={() => setSelectedMethod('')}
-                          className="text-primary text-sm font-medium leading-normal hover:underline"
-                        >
-                          {t('common.change')}
-                        </button>
+                    ) : (
+                      <div className="flex items-center justify-center gap-4 bg-background-dark px-4 py-3 min-h-14 rounded-lg border border-border-dark">
+                        <p className="text-text-dark text-sm">Lütfen bir ödeme yöntemi seçin</p>
                       </div>
-                    </div>
-
-                    <div className="mt-6">
-                      <label className="block text-sm font-medium text-white mb-2" htmlFor="amount">{t('common.amount')}</label>
-                      <div className="relative">
-                        <input
-                          className="w-full h-12 rounded-lg border border-[#3a3a3a] bg-[#2a2a2a] text-white pl-12 pr-4 text-base font-normal leading-normal placeholder:text-gray-500 transition-all focus:border-primary focus:bg-[#2f2f2f] focus:outline-none focus:ring-2 focus:ring-primary/20"
-                          id="amount"
-                          name="amount"
-                          placeholder="0.00"
-                          type="text"
-                          value={amount}
-                          onChange={(e) => setAmount(e.target.value)}
-                          aria-required="true"
-                        />
-                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-base text-gray-500">₺</span>
-                      </div>
-                    </div>
-
-                    <div className="flex gap-2 mt-3">
-                      {quickAmounts.map((quickAmount) => (
-                        <button
-                          key={quickAmount}
-                          onClick={() => handleAmountClick(quickAmount)}
-                          type="button"
-                          className="flex-1 text-sm bg-background-dark rounded-md py-2 border border-border-dark hover:border-primary/50 transition-colors text-white"
-                        >
-                          {quickAmount}
-                        </button>
-                      ))}
-                    </div>
+                    )}
 
                     {error && (
                       <div className="mt-4 rounded-lg bg-red-500/20 border border-red-500/50 p-3">
@@ -536,16 +531,49 @@ function DepositPage() {
                       </div>
                     )}
 
-                    <div className="mt-6 flex-grow flex flex-col justify-between">
+                    <form onSubmit={handleDeposit} className="mt-6 flex-grow flex flex-col justify-between">
                       <div>
-                        <p className="text-sm font-medium text-text-light">{t('common.instructions')}</p>
-                        <p className="text-sm text-text-dark mt-2 bg-background-dark p-3 rounded-lg border border-border-dark">
-                          {t('common.depositInstructionText')}
+                        <div className="mb-4">
+                          <label className="block text-sm font-medium text-white mb-2" htmlFor="amount">{t('common.amount') || 'Amount'}</label>
+                          <div className="relative">
+                            <input
+                              className="w-full h-12 rounded-lg border border-[#3a3a3a] bg-[#2a2a2a] text-white pl-12 pr-4 text-base font-normal leading-normal placeholder:text-gray-500 transition-all focus:border-primary focus:bg-[#2f2f2f] focus:outline-none focus:ring-2 focus:ring-primary/20"
+                              id="amount"
+                              name="amount"
+                              placeholder="0.00"
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              value={amount}
+                              onChange={(e) => setAmount(e.target.value)}
+                              aria-required="true"
+                              required
+                            />
+                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-base text-gray-500">₺</span>
+                          </div>
+                        </div>
+
+                        <div className="flex gap-2 mb-4">
+                          {quickAmounts.map((quickAmount) => (
+                            <button
+                              key={quickAmount}
+                              onClick={() => handleAmountClick(quickAmount)}
+                              type="button"
+                              className="flex-1 text-sm bg-background-dark rounded-md py-2 border border-border-dark hover:border-primary/50 transition-colors text-white"
+                            >
+                              {quickAmount}
+                            </button>
+                          ))}
+                        </div>
+
+                        <p className="text-sm font-medium text-text-light mb-2">{t('common.instructions') || 'Instructions'}</p>
+                        <p className="text-sm text-text-dark mb-4 bg-background-dark p-3 rounded-lg border border-border-dark">
+                          {t('common.depositInstructionText') || 'Please follow the instructions for your selected payment method.'}
                         </p>
 
                         {/* show IBAN info when IBAN method selected */}
                         {isIbanMethod(selectedMethodData) && (
-                          <div className="mt-4">
+                          <div className="mb-4">
                             {ibans.length > 0 ? (
                               <div className="space-y-3">
                                 <p className="text-white font-medium text-sm mb-2">Banka Hesapları</p>
@@ -568,10 +596,31 @@ function DepositPage() {
                                         <div className="flex items-center gap-2 flex-1 justify-end">
                                           <p className="text-white font-mono text-xs break-all text-right">{iban.ibanNumber}</p>
                                           <button
-                                            onClick={() => {
-                                              navigator.clipboard.writeText(iban.ibanNumber)
-                                              setSuccess('IBAN kopyalandı!')
-                                              setTimeout(() => setSuccess(''), 3000)
+                                            type="button"
+                                            onClick={async () => {
+                                              try {
+                                                if (navigator.clipboard && navigator.clipboard.writeText) {
+                                                  await navigator.clipboard.writeText(iban.ibanNumber)
+                                                  setSuccess('IBAN kopyalandı!')
+                                                  setTimeout(() => setSuccess(''), 3000)
+                                                } else {
+                                                  // Fallback for older browsers
+                                                  const textArea = document.createElement('textarea')
+                                                  textArea.value = iban.ibanNumber
+                                                  textArea.style.position = 'fixed'
+                                                  textArea.style.left = '-999999px'
+                                                  document.body.appendChild(textArea)
+                                                  textArea.select()
+                                                  document.execCommand('copy')
+                                                  document.body.removeChild(textArea)
+                                                  setSuccess('IBAN kopyalandı!')
+                                                  setTimeout(() => setSuccess(''), 3000)
+                                                }
+                                              } catch (err) {
+                                                console.error('Failed to copy IBAN:', err)
+                                                setError('IBAN kopyalanamadı. Lütfen manuel olarak kopyalayın.')
+                                                setTimeout(() => setError(''), 3000)
+                                              }
                                             }}
                                             className="shrink-0 text-primary hover:text-primary/80 transition-colors"
                                             title="IBAN'ı Kopyala"
@@ -594,7 +643,7 @@ function DepositPage() {
                                 <p className="mt-1">Hesap Sahibi: <span className="text-white">{bankInfo.accountHolder}</span></p>
                                 <p>Bank: <span className="text-white">{bankInfo.bankName}</span></p>
                                 <p>IBAN: <span className="text-white">{bankInfo.iban}</span></p>
-                                {bankInfo.instructions && (
+                                {bankInfo.instructions && Array.isArray(bankInfo.instructions) && (
                                   <ul className="mt-2 list-disc list-inside text-xs text-text-dark">
                                     {bankInfo.instructions.map((ins, i) => <li key={i}>{ins}</li>)}
                                   </ul>
@@ -611,27 +660,17 @@ function DepositPage() {
                       </div>
 
                       <button
-                        onClick={handleDeposit}
-                        disabled={loading || !selectedMethod}
+                        type="submit"
+                        disabled={loading || !selectedMethod || !selectedMethodData}
                         className="w-full mt-6 bg-primary text-black font-bold py-4 rounded-lg text-base hover:brightness-110 transition-all duration-300 shadow-glow-primary-lg disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        {loading ? t('common.processing') || 'İşleniyor...' : t('common.completeDeposit')}
+                        {loading ? (t('common.processing') || 'İşleniyor...') : (t('common.completeDeposit') || 'Yatırım Yap')}
                       </button>
-                    </div>
+                    </form>
                   </div>
                 </div>
               </div>
             </main>
-
-            {/* Footer */}
-            <footer className="text-center p-6 border-t border-border-dark mt-auto">
-              <div className="flex justify-center gap-6 mb-4">
-                <Link className="text-text-dark hover:text-white text-sm" href="/terms">Şartlar ve Koşullar</Link>
-                <Link className="text-text-dark hover:text-white text-sm" href="/about/responsible-gaming">Sorumlu Oyun</Link>
-                <Link className="text-text-dark hover:text-white text-sm" href="/help/contact">Müşteri Desteği</Link>
-              </div>
-              <p className="text-xs text-text-dark">© 2024 CasinoBet. Tüm hakları saklıdır.</p>
-            </footer>
           </div>
         </div>
       </div>

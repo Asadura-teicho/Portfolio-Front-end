@@ -1,87 +1,72 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Navbar from '@/components/Navbar'
 import { useTranslation } from '@/hooks/useTranslation'
+import { tournamentAPI } from '@/lib/api/tournament.api'
+import { log } from '@/utils/logger'
 
 export default function TournamentsPage() {
   const { t } = useTranslation()
-  const [selectedFilter, setSelectedFilter] = useState('active')
+  const router = useRouter()
+  const [selectedFilter, setSelectedFilter] = useState('all')
+  const [tournaments, setTournaments] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [joining, setJoining] = useState(null)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [total, setTotal] = useState(0)
 
-  const tournaments = [
-    {
-      id: 1,
-      name: 'Mega Slots Tournament',
-      game: 'Slots',
-      prizePool: 50000,
-      players: 1247,
-      maxPlayers: 5000,
-      startDate: '2024-01-15',
-      endDate: '2024-01-22',
-      status: 'active',
-      entryFee: 0,
-      image: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=300&h=400&fit=crop'
-    },
-    {
-      id: 2,
-      name: 'Live Casino Championship',
-      game: 'Live Casino',
-      prizePool: 75000,
-      players: 892,
-      maxPlayers: 2000,
-      startDate: '2024-01-20',
-      endDate: '2024-01-27',
-      status: 'upcoming',
-      entryFee: 100,
-      image: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=300&h=400&fit=crop'
-    },
-    {
-      id: 3,
-      name: 'Sports Betting Masters',
-      game: 'Sports',
-      prizePool: 100000,
-      players: 2156,
-      maxPlayers: 10000,
-      startDate: '2024-01-10',
-      endDate: '2024-01-17',
-      status: 'active',
-      entryFee: 0,
-      image: 'https://images.unsplash.com/photo-1606092195730-5d7b9af1efc5?w=300&h=400&fit=crop'
-    },
-    {
-      id: 4,
-      name: 'Crash Game Challenge',
-      game: 'Crash',
-      prizePool: 30000,
-      players: 3456,
-      maxPlayers: 10000,
-      startDate: '2024-01-25',
-      endDate: '2024-02-01',
-      status: 'upcoming',
-      entryFee: 50,
-      image: 'https://images.unsplash.com/photo-1518709268805-4e9042af2176?w=300&h=400&fit=crop'
-    },
-    {
-      id: 5,
-      name: 'Weekly Slots Showdown',
-      game: 'Slots',
-      prizePool: 25000,
-      players: 5678,
-      maxPlayers: 10000,
-      startDate: '2024-01-08',
-      endDate: '2024-01-15',
-      status: 'finished',
-      entryFee: 0,
-      image: 'https://images.unsplash.com/photo-1596838132731-3301c3fd4317?w=300&h=400&fit=crop'
-    },
-  ]
+  // Fetch tournaments from API
+  useEffect(() => {
+    fetchTournaments()
+  }, [selectedFilter, currentPage])
+
+  const fetchTournaments = async () => {
+    setLoading(true)
+    setError('')
+    try {
+      const params = {
+        page: currentPage,
+        limit: 12,
+      }
+      
+      if (selectedFilter !== 'all') {
+        params.status = selectedFilter
+      }
+
+      const response = await tournamentAPI.getTournaments(params)
+      setTournaments(response.data.tournaments || [])
+      setTotalPages(response.data.totalPages || 1)
+      setTotal(response.data.total || 0)
+    } catch (err) {
+      console.error('Error fetching tournaments:', err)
+      setError(err.response?.data?.message || 'Failed to load tournaments')
+      log.apiError('/tournaments', err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleJoinTournament = async (tournamentId) => {
+    setJoining(tournamentId)
+    setError('')
+    try {
+      await tournamentAPI.joinTournament(tournamentId)
+      // Refresh tournaments to update participation status
+      await fetchTournaments()
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to join tournament')
+      log.apiError('/tournaments/join', err)
+    } finally {
+      setJoining(null)
+    }
+  }
 
   const filters = ['all', 'active', 'upcoming', 'finished']
-
-  const filteredTournaments = selectedFilter === 'all'
-    ? tournaments
-    : tournaments.filter(t => t.status === selectedFilter)
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -104,9 +89,22 @@ export default function TournamentsPage() {
         return 'Upcoming'
       case 'finished':
         return 'Finished'
+      case 'cancelled':
+        return 'Cancelled'
       default:
         return status
     }
+  }
+
+  const getGameTypeLabel = (gameType) => {
+    const gameTypeMap = {
+      slots: 'Slots',
+      live_casino: 'Live Casino',
+      sports: 'Sports',
+      crash: 'Crash',
+      all: 'All Games'
+    }
+    return gameTypeMap[gameType] || gameType
   }
 
   return (
@@ -127,7 +125,10 @@ export default function TournamentsPage() {
               {filters.map((filter) => (
                 <button
                   key={filter}
-                  onClick={() => setSelectedFilter(filter)}
+                  onClick={() => {
+                    setSelectedFilter(filter)
+                    setCurrentPage(1)
+                  }}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                     selectedFilter === filter
                       ? 'bg-primary text-background-dark'
@@ -139,16 +140,34 @@ export default function TournamentsPage() {
               ))}
             </div>
 
-            {/* Tournaments Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredTournaments.map((tournament) => (
+            {/* Error Message */}
+            {error && (
+              <div className="rounded-lg bg-red-500/20 border border-red-500/50 p-4">
+                <p className="text-sm text-red-400">{error}</p>
+              </div>
+            )}
+
+            {/* Loading State */}
+            {loading ? (
+              <div className="flex items-center justify-center py-12">
+                <p className="text-white/70">Loading tournaments...</p>
+              </div>
+            ) : tournaments.length === 0 ? (
+              <div className="flex items-center justify-center py-12">
+                <p className="text-white/70">No tournaments available</p>
+              </div>
+            ) : (
+              <>
+                {/* Tournaments Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {tournaments.map((tournament) => (
                 <div
                   key={tournament.id}
                   className="group relative overflow-hidden rounded-xl bg-zinc-900 hover:bg-zinc-800 transition-all"
                 >
                   <div className="aspect-video relative overflow-hidden">
                     <img
-                      src={tournament.image}
+                      src={tournament.bannerImage || 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=300&h=400&fit=crop'}
                       alt={tournament.name}
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                     />
@@ -158,13 +177,23 @@ export default function TournamentsPage() {
                         {getStatusText(tournament.status)}
                       </span>
                     </div>
+                    {tournament.isFeatured && (
+                      <div className="absolute top-2 right-2">
+                        <span className="px-2 py-1 rounded text-xs font-bold bg-yellow-500/80 text-black backdrop-blur-sm">
+                          FEATURED
+                        </span>
+                      </div>
+                    )}
                   </div>
                   <div className="p-6">
                     <h3 className="text-white text-xl font-bold mb-2">{tournament.name}</h3>
+                    {tournament.description && (
+                      <p className="text-white/70 text-sm mb-3 line-clamp-2">{tournament.description}</p>
+                    )}
                     <div className="space-y-2 mb-4">
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-white/70">Game:</span>
-                        <span className="text-white font-medium">{tournament.game}</span>
+                        <span className="text-white font-medium">{getGameTypeLabel(tournament.gameType)}</span>
                       </div>
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-white/70">Prize Pool:</span>
@@ -173,15 +202,17 @@ export default function TournamentsPage() {
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-white/70">Players:</span>
                         <span className="text-white font-medium">
-                          {tournament.players.toLocaleString()} / {tournament.maxPlayers.toLocaleString()}
+                          {tournament.totalParticipants.toLocaleString()} {tournament.maxPlayers ? `/ ${tournament.maxPlayers.toLocaleString()}` : ''}
                         </span>
                       </div>
-                      <div className="w-full bg-zinc-700 rounded-full h-2">
-                        <div
-                          className="bg-primary h-2 rounded-full transition-all"
-                          style={{ width: `${(tournament.players / tournament.maxPlayers) * 100}%` }}
-                        />
-                      </div>
+                      {tournament.maxPlayers && (
+                        <div className="w-full bg-zinc-700 rounded-full h-2">
+                          <div
+                            className="bg-primary h-2 rounded-full transition-all"
+                            style={{ width: `${Math.min((tournament.totalParticipants / tournament.maxPlayers) * 100, 100)}%` }}
+                          />
+                        </div>
+                      )}
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-white/70">Entry Fee:</span>
                         <span className="text-white font-medium">
@@ -192,23 +223,105 @@ export default function TournamentsPage() {
                         <span>Start: {new Date(tournament.startDate).toLocaleDateString()}</span>
                         <span>End: {new Date(tournament.endDate).toLocaleDateString()}</span>
                       </div>
+                      {tournament.isRegistered && (
+                        <div className="mt-2 p-2 bg-blue-500/20 border border-blue-500/50 rounded text-xs text-blue-400">
+                          You are registered for this tournament
+                        </div>
+                      )}
                     </div>
                     <button
-                      className={`w-full py-3 rounded-lg font-bold transition-colors ${
-                        tournament.status === 'active'
+                      onClick={() => {
+                        if (tournament.canJoin && !tournament.isRegistered) {
+                          handleJoinTournament(tournament._id)
+                        } else if (tournament.isRegistered) {
+                          router.push(`/tournaments/${tournament._id}`)
+                        }
+                      }}
+                      disabled={tournament.status === 'finished' || tournament.status === 'cancelled' || joining === tournament._id || (!tournament.canJoin && !tournament.isRegistered)}
+                      className={`w-full py-3 rounded-lg font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                        tournament.isRegistered
+                          ? 'bg-blue-600 text-white hover:bg-blue-700'
+                          : tournament.status === 'active' && tournament.canJoin
                           ? 'bg-primary text-background-dark hover:bg-yellow-400'
-                          : tournament.status === 'upcoming'
+                          : tournament.status === 'upcoming' && tournament.canJoin
                           ? 'bg-blue-600 text-white hover:bg-blue-700'
                           : 'bg-gray-600 text-white cursor-not-allowed'
                       }`}
-                      disabled={tournament.status === 'finished'}
                     >
-                      {tournament.status === 'active' ? 'Join Tournament' : tournament.status === 'upcoming' ? 'Register' : 'Finished'}
+                      {joining === tournament._id 
+                        ? 'Joining...' 
+                        : tournament.isRegistered 
+                        ? 'View Tournament' 
+                        : tournament.status === 'active' 
+                        ? 'Join Tournament' 
+                        : tournament.status === 'upcoming' 
+                        ? 'Register' 
+                        : 'Finished'}
                     </button>
                   </div>
                 </div>
-              ))}
-            </div>
+                  ))}
+                </div>
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-center pt-8">
+                    <nav className="flex items-center gap-2">
+                      <button 
+                        onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                        disabled={currentPage === 1}
+                        className="flex size-10 items-center justify-center rounded-lg text-white/60 hover:bg-zinc-800 hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <span className="material-symbols-outlined text-xl">chevron_left</span>
+                      </button>
+                      {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                        let pageNum
+                        if (totalPages <= 5) {
+                          pageNum = i + 1
+                        } else if (currentPage <= 3) {
+                          pageNum = i + 1
+                        } else if (currentPage >= totalPages - 2) {
+                          pageNum = totalPages - 4 + i
+                        } else {
+                          pageNum = currentPage - 2 + i
+                        }
+                        return (
+                          <button
+                            key={pageNum}
+                            onClick={() => setCurrentPage(pageNum)}
+                            className={`text-sm leading-normal flex size-10 items-center justify-center rounded-lg transition-colors ${
+                              currentPage === pageNum
+                                ? 'text-background-dark bg-primary font-bold'
+                                : 'text-white/60 hover:bg-zinc-800 hover:text-white font-medium'
+                            }`}
+                          >
+                            {pageNum}
+                          </button>
+                        )
+                      })}
+                      {totalPages > 5 && currentPage < totalPages - 2 && (
+                        <>
+                          <span className="text-sm font-medium leading-normal flex size-10 items-center justify-center text-white/60 rounded-lg">...</span>
+                          <button
+                            onClick={() => setCurrentPage(totalPages)}
+                            className="text-sm font-medium leading-normal flex size-10 items-center justify-center rounded-lg text-white/60 hover:bg-zinc-800 hover:text-white transition-colors"
+                          >
+                            {totalPages}
+                          </button>
+                        </>
+                      )}
+                      <button 
+                        onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                        disabled={currentPage === totalPages}
+                        className="flex size-10 items-center justify-center rounded-lg text-white/60 hover:bg-zinc-800 hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <span className="material-symbols-outlined text-xl">chevron_right</span>
+                      </button>
+                    </nav>
+                  </div>
+                )}
+              </>
+            )}
 
             {/* Info Section */}
             <div className="mt-8 p-6 bg-zinc-900 rounded-xl">

@@ -50,11 +50,13 @@ function ContentManagement() {
 const navItems = [
   { id: 'dashboard', label: 'Dashboard Overview', icon: 'dashboard', href: '/admin' },
   { id: 'users', label: 'User Management', icon: 'group', href: '/admin/users' },
-  // { id: 'kyc', label: 'KYC Management', icon: 'badge', href: '/admin/kyc' }, // <-- Added KYC Management
+  { id: 'kyc', label: 'KYC Management', icon: 'badge', href: '/admin/kyc' }, // <-- Added KYC Management
   { id: 'games', label: 'Game Management', icon: 'gamepad', href: '/admin/games' },
   { id: 'betting', label: 'Betting Management', icon: 'sports_soccer', href: '/admin/betting' },
   { id: 'promotions', label: 'Promotions Management', icon: 'campaign', href: '/admin/promotions' },
-  { id: 'finances', label: 'Deposits & Withdrawals', icon: 'paid', href: '/admin/finances' },
+  { id: 'deposits', label: 'Deposits', icon: 'arrow_downward', href: '/admin/deposits' },
+  { id: 'withdrawals', label: 'Withdrawals', icon: 'arrow_upward', href: '/admin/withdrawals' },
+  { id: 'tournaments', label: 'Tournaments', icon: 'emoji_events', href: '/admin/tournaments' },
   { id: 'content', label: 'Content Management', icon: 'wysiwyg', href: '/admin/content' },
 ]
 
@@ -264,8 +266,6 @@ const navItems = [
       <button
         onClick={() => {
           localStorage.removeItem('token')
-          localStorage.removeItem('accessToken')
-          localStorage.removeItem('refreshToken')
           localStorage.removeItem('user')
           localStorage.removeItem('isAdmin')
           localStorage.removeItem('adminEmail')
@@ -407,10 +407,10 @@ const navItems = [
                       setCurrentPage(1)
                     }}
                   >
-                    <option value="all" className="bg-[#283639]">All Statuses</option>
-                    <option value="published" className="bg-[#283639]">Published</option>
-                    <option value="draft" className="bg-[#283639]">Draft</option>
-                    <option value="archived" className="bg-[#283639]">Archived</option>
+                    <option value="all" className="bg-[#283639] text-white">All Statuses</option>
+                    <option value="published" className="bg-[#283639] text-white">Published</option>
+                    <option value="draft" className="bg-[#283639] text-white">Draft</option>
+                    <option value="archived" className="bg-[#283639] text-white">Archived</option>
                   </select>
                   <span className="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-[#9cb5ba] pointer-events-none">
                     expand_more
@@ -485,6 +485,14 @@ const navItems = [
                               </button>
                               {item.status === 'published' && (
                                 <button
+                                  onClick={() => {
+                                    // Open content in new tab or show preview modal
+                                    if (item.slug) {
+                                      window.open(`/content/${item.slug}`, '_blank')
+                                    } else {
+                                      console.log('View content:', item._id)
+                                    }
+                                  }}
                                   className="p-2 text-white/70 hover:text-white hover:bg-[#283639] rounded-md transition-colors"
                                   title="View"
                                 >

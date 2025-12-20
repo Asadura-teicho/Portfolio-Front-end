@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import Navbar from '@/components/Navbar'
+import Footer from '@/components/Footer'
 
 export default function ResponsibleGamingPage() {
   return (
@@ -42,6 +43,7 @@ export default function ResponsibleGamingPage() {
           </div>
         </div>
       </main>
+      <Footer />
     </div>
   )
 }

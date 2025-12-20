@@ -395,6 +395,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { authAPI, paymentAPI, kycAPI } from '@/lib/api'
 import ProtectedRoute from '@/components/ProtectedRoute'
+import UserSidebar from '@/components/UserSidebar'
 
 function ProfilePage() {
   const router = useRouter()
@@ -422,27 +423,89 @@ function ProfilePage() {
   useEffect(() => {
     const fetchUser = async () => {
       try {
+        setError('')
+        setLoading(true)
+        
+        // Try to get user from localStorage first as fallback
+        let userData = null
+        try {
+          const userStr = localStorage.getItem('user')
+          if (userStr) {
+            userData = JSON.parse(userStr)
+          }
+        } catch (e) {
+          // Ignore localStorage errors
+        }
+        
+        // Fetch user data and KYC data in parallel
         const [userResponse, kycResponse] = await Promise.all([
-          authAPI.getMe(),
-          kycAPI.getKYC().catch(() => ({ data: { kycStatus: 'not_submitted', documents: {} } })),
+          authAPI.getMe().catch((err) => {
+            // If API fails but we have localStorage data, use it
+            if (userData) {
+              return { data: userData }
+            }
+            throw err
+          }),
+          kycAPI.getKYC().catch((err) => {
+            // If KYC endpoint fails, return default values
+            console.warn('KYC fetch failed:', err)
+            return { data: { kycStatus: 'not_submitted', documents: {} } }
+          }),
         ])
-        const userData = userResponse.data
-        setUser(userData)
+        
+        const fetchedUserData = userResponse.data || userData
+        if (!fetchedUserData) {
+          throw new Error('No user data available')
+        }
+        
+        // Update localStorage with fresh data
+        try {
+          localStorage.setItem('user', JSON.stringify(fetchedUserData))
+        } catch (e) {
+          // Ignore localStorage errors
+        }
+        
+        setUser(fetchedUserData)
         setFormData({
-          firstName: userData.firstName || '',
-          lastName: userData.lastName || '',
-          phone: userData.phone || '',
-          iban: userData.iban || '',
-          ibanHolderName: userData.ibanHolderName || '',
-          bankName: userData.bankName || ''
+          firstName: fetchedUserData.firstName || '',
+          lastName: fetchedUserData.lastName || '',
+          phone: fetchedUserData.phone || '',
+          iban: fetchedUserData.iban || '',
+          ibanHolderName: fetchedUserData.ibanHolderName || '',
+          bankName: fetchedUserData.bankName || ''
         })
-        setKycStatus(kycResponse.data.kycStatus || 'not_submitted')
-        setKycDocuments(kycResponse.data.documents || {})
+        
+        // Set KYC data if available
+        if (kycResponse?.data) {
+          setKycStatus(kycResponse.data.kycStatus || 'not_submitted')
+          setKycDocuments(kycResponse.data.documents || {})
+        }
       } catch (err) {
+        console.error('Profile fetch error:', err)
         if (err.response?.status === 401) {
-          router.push('/auth/login')
+          window.location.href = '/auth/login'
+          return
+        }
+        // Don't show error if we have fallback data
+        const userStr = localStorage.getItem('user')
+        if (userStr) {
+          try {
+            const fallbackUser = JSON.parse(userStr)
+            setUser(fallbackUser)
+            setFormData({
+              firstName: fallbackUser.firstName || '',
+              lastName: fallbackUser.lastName || '',
+              phone: fallbackUser.phone || '',
+              iban: fallbackUser.iban || '',
+              ibanHolderName: fallbackUser.ibanHolderName || '',
+              bankName: fallbackUser.bankName || ''
+            })
+            setError('') // Clear error if we have fallback data
+          } catch (e) {
+            setError('Failed to load profile. Please refresh the page.')
+          }
         } else {
-          setError('Failed to load profile')
+          setError(err.response?.data?.message || err.message || 'Failed to load profile. Please try again.')
         }
       } finally {
         setLoading(false)
@@ -544,8 +607,10 @@ function ProfilePage() {
   }
 
   return (
-    <div className="relative flex min-h-screen w-full flex-col bg-background-dark font-display text-[#EAEAEA]">
-      <main className="flex-grow">
+    <div className="flex min-h-screen bg-background-dark font-display text-[#EAEAEA]">
+      <UserSidebar />
+      <div className="flex-1 flex flex-col ml-0 lg:ml-64">
+        <main className="flex-1 overflow-y-auto">
         <div className="container mx-auto px-4 py-8 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-4xl">
             {/* ⬇⬇⬇ UI BELOW IS 100% UNCHANGED ⬇⬇⬇ */}
@@ -772,7 +837,8 @@ function ProfilePage() {
             </div>
           </div>
         </div>
-      </main>
+        </main>
+      </div>
     </div>
   )
 }

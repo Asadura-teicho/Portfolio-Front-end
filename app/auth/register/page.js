@@ -80,6 +80,11 @@ const handleSubmit = async (e) => {
       if (typeof window !== 'undefined') {
         localStorage.setItem('token', token);
         localStorage.setItem('user', JSON.stringify(user));
+        
+        const adminRoles = ['admin', 'super_admin', 'operator'];
+        const isAdminUser = adminRoles.includes(user.role);
+        localStorage.setItem('isAdmin', isAdminUser ? 'true' : 'false');
+        if (isAdminUser && user.email) localStorage.setItem('adminEmail', user.email);
       }
       router.push(redirectPath || '/dashboard');
 

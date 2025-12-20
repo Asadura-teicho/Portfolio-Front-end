@@ -63,14 +63,22 @@ export const logout = () => {
   if (typeof window === 'undefined') return;
   
   localStorage.removeItem('token');
-  localStorage.removeItem('accessToken');
-  localStorage.removeItem('refreshToken');
   localStorage.removeItem('user');
   localStorage.removeItem('isAdmin');
   localStorage.removeItem('adminEmail');
   
   // Redirect to home
   window.location.href = '/';
+};
+
+// Clear all auth data (for logout)
+export const clearAuthData = () => {
+  if (typeof window === 'undefined') return;
+  
+  localStorage.removeItem('token');
+  localStorage.removeItem('user');
+  localStorage.removeItem('isAdmin');
+  localStorage.removeItem('adminEmail');
 };
 
 // Store user data after login/register

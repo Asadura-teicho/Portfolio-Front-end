@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Navbar from '@/components/Navbar'
+import Footer from '@/components/Footer'
 import { mockStatistics, mockBets, simulateApiDelay } from '@/lib/mockData'
 import { statsAPI } from '@/lib/api'
 
@@ -163,6 +164,7 @@ export default function StatisticsPage() {
           </div>
         </div>
       </main>
+      <Footer />
     </div>
   )
 }

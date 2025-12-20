@@ -1,12 +1,14 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Navbar from '@/components/Navbar'
 import { useTranslation } from '@/hooks/useTranslation'
 
 export default function LiveCasinoPage() {
   const { t } = useTranslation()
+  const router = useRouter()
   const [selectedProvider, setSelectedProvider] = useState(t('liveCasino.all'))
 
   const games = [
@@ -114,10 +116,22 @@ export default function LiveCasinoPage() {
                     <h1 className="text-white text-4xl font-black leading-tight tracking-[-0.033em]">{t('liveCasino.title')}</h1>
                     <p className="text-white/80 text-lg font-medium">{t('liveCasino.subtitle')}</p>
                     <div className="flex gap-3">
-                      <button className="flex min-w-[120px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 px-6 bg-primary text-background-dark text-sm font-bold leading-normal tracking-[0.015em] hover:bg-yellow-400 transition-all">
+                      <button 
+                        onClick={() => {
+                          // Scroll to games section or navigate to first game
+                          const gamesSection = document.querySelector('[data-games-section]')
+                          if (gamesSection) {
+                            gamesSection.scrollIntoView({ behavior: 'smooth' })
+                          }
+                        }}
+                        className="flex min-w-[120px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 px-6 bg-primary text-background-dark text-sm font-bold leading-normal tracking-[0.015em] hover:bg-yellow-400 transition-all"
+                      >
                         <span className="truncate">{t('liveCasino.playNow')}</span>
                       </button>
-                      <button className="flex min-w-[120px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 px-6 bg-white/10 text-white text-sm font-bold leading-normal tracking-[0.015em] hover:bg-white/20 transition-all border border-white/20">
+                      <button 
+                        onClick={() => router.push('/help/faq')}
+                        className="flex min-w-[120px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 px-6 bg-white/10 text-white text-sm font-bold leading-normal tracking-[0.015em] hover:bg-white/20 transition-all border border-white/20"
+                      >
                         <span className="truncate">{t('liveCasino.learnMore')}</span>
                       </button>
                     </div>
@@ -147,10 +161,10 @@ export default function LiveCasinoPage() {
                 <div className="w-full md:w-auto">
                   <div className="relative w-full md:w-48">
                     <select className="w-full appearance-none rounded-lg border-none bg-[#393528] h-12 pl-4 pr-10 text-white focus:ring-2 focus:ring-primary/50 text-sm font-medium">
-                      <option>Tüm Sağlayıcılar</option>
-                      <option>Evolution</option>
-                      <option>Pragmatic Live</option>
-                      <option>Ezugi</option>
+                      <option value="" className="bg-[#393528] text-white">Tüm Sağlayıcılar</option>
+                      <option value="evolution" className="bg-[#393528] text-white">Evolution</option>
+                      <option value="pragmatic" className="bg-[#393528] text-white">Pragmatic Live</option>
+                      <option value="ezugi" className="bg-[#393528] text-white">Ezugi</option>
                     </select>
                     <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-[#b9b29d]">
                       <span className="material-symbols-outlined">expand_more</span>
@@ -209,7 +223,15 @@ export default function LiveCasinoPage() {
                       </div>
                     </div>
                     <div className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-                      <button className="flex items-center justify-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-bold text-black">
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          // TODO: Launch live casino game
+                          console.log('Play live casino game:', game.name)
+                          // Example: router.push(`/live-casino/${game.id}`)
+                        }}
+                        className="flex items-center justify-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-bold text-black hover:bg-yellow-400 transition-colors"
+                      >
                         <span>{t('liveCasino.playNow')}</span>
                         <span className="material-symbols-outlined text-base">play_arrow</span>
                       </button>

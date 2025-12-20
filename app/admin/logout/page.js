@@ -18,8 +18,6 @@ export default function AdminLogoutPage() {
 
       // Clear local auth state
       localStorage.removeItem('token')
-      localStorage.removeItem('accessToken')
-      localStorage.removeItem('refreshToken')
       localStorage.removeItem('user')
       localStorage.removeItem('isAdmin')
       localStorage.removeItem('adminEmail')

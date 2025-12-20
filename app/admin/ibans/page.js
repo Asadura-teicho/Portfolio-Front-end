@@ -128,7 +128,9 @@ function IbansPage() {
     { id: 'dashboard', label: 'Dashboard', icon: 'dashboard', href: '/admin' },
     { id: 'users', label: 'Users', icon: 'group', href: '/admin/users' },
     { id: 'games', label: 'Games', icon: 'casino', href: '/admin/games' },
-    { id: 'finances', label: 'Deposits & Withdrawals', icon: 'credit_card', href: '/admin/finances' },
+    { id: 'deposits', label: 'Deposits', icon: 'arrow_downward', href: '/admin/deposits' },
+    { id: 'withdrawals', label: 'Withdrawals', icon: 'arrow_upward', href: '/admin/withdrawals' },
+    { id: 'tournaments', label: 'Tournaments', icon: 'emoji_events', href: '/admin/tournaments' },
     { id: 'ibans', label: 'IBAN Management', icon: 'account_balance', href: '/admin/ibans' },
     { id: 'settings', label: 'Settings', icon: 'settings', href: '/admin/settings' },
   ]
@@ -176,8 +178,6 @@ function IbansPage() {
           <button
             onClick={() => {
               localStorage.removeItem('token')
-              localStorage.removeItem('accessToken')
-              localStorage.removeItem('refreshToken')
               localStorage.removeItem('user')
               localStorage.removeItem('isAdmin')
               localStorage.removeItem('adminEmail')

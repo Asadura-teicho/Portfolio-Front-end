@@ -19,13 +19,8 @@ export default function AuthInitializer() {
         const res = await authAPI.me();
         setUser(res.data);
       } catch (err) {
-        try {
-          await authAPI.refresh();
-          const res = await authAPI.me();
-          setUser(res.data);
-        } catch {
-          logout();
-        }
+        // If token is invalid, clear auth state
+        logout();
       }
     };
 

@@ -188,11 +188,12 @@
 // }
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useTranslation } from '@/hooks/useTranslation'
 import { authAPI } from '@/lib/api'
+import { handleApiError, setTranslationFunction } from '@/utils/errorHandler'
 
 const adminRoles = ['admin', 'super_admin', 'operator']
 
@@ -206,6 +207,11 @@ export default function LoginPage() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
+  // Initialize translation function in error handler
+  useEffect(() => {
+    setTranslationFunction(t)
+  }, [t])
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
@@ -215,15 +221,15 @@ export default function LoginPage() {
       const response = await authAPI.login(email, password)
 
       // Backend returns: { token, user, redirectPath }
-      const { user, redirectPath } = response.data || {}
+      const { token, user, redirectPath } = response.data || {}
 
-      if (!user) {
-        throw new Error('Login succeeded but no user payload was returned')
+      if (!user || !token) {
+        throw new Error('Login succeeded but no user or token payload was returned')
       }
 
-      // Persist user (for client-side role checks) + a non-sensitive flag token
+      // Store the actual token and user data
+      localStorage.setItem('token', token)
       localStorage.setItem('user', JSON.stringify(user))
-      localStorage.setItem('token', 'cookie-auth')
 
       const isAdminUser = adminRoles.includes(user.role)
       localStorage.setItem('isAdmin', isAdminUser ? 'true' : 'false')
@@ -234,18 +240,24 @@ export default function LoginPage() {
       const next = searchParams?.get('next')
       const nextPath = next && next.startsWith('/') ? next : null
 
+      // Determine redirect path
+      let finalRedirectPath
       if (nextPath) {
         if (nextPath.startsWith('/admin') && !isAdminUser) {
-          router.push('/dashboard')
+          finalRedirectPath = '/dashboard'
         } else {
-          router.push(nextPath)
+          finalRedirectPath = nextPath
         }
-        return
+      } else {
+        finalRedirectPath = redirectPath || (isAdminUser ? '/admin' : '/dashboard')
       }
 
-      router.push(redirectPath || (isAdminUser ? '/admin' : '/dashboard'))
+      // Use window.location for reliable redirect
+      window.location.href = finalRedirectPath
     } catch (err) {
-      setError(err.response?.data?.message || err.message || 'Login failed. Please check your credentials.')
+      // Use centralized error handling with translation
+      const errorDetails = handleApiError(err, t('errors.loginFailed'))
+      setError(errorDetails.message)
     } finally {
       setLoading(false)
     }
@@ -271,7 +283,12 @@ export default function LoginPage() {
 
             {error && (
               <div className="mb-4 rounded-lg bg-red-500/20 border border-red-500/50 p-3">
-                <p className="text-sm text-red-400">{error}</p>
+                <p className="text-sm text-red-400 font-medium">{error}</p>
+                {process.env.NODE_ENV === 'development' && (
+                  <p className="text-xs text-red-300/70 mt-1">
+                    API URL: {process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api'}
+                  </p>
+                )}
               </div>
             )}
 

@@ -30,19 +30,29 @@
 import { NextResponse } from 'next/server'
 
 export function middleware(request) {
-  const token = request.cookies.get('accessToken')
-  const isAdmin = request.cookies.get('isAdmin')?.value === 'true'
+  // Note: We're using localStorage for tokens now, not cookies
+  // Server-side middleware can't access localStorage, so we rely on
+  // client-side route protection (ProtectedRoute, AdminProtectedRoute)
+  // This middleware is kept minimal to avoid blocking valid requests
+  
   const url = request.nextUrl.clone()
+  
+  // Allow all requests - client-side components will handle auth checks
+  // This prevents server-side middleware from blocking users with localStorage tokens
+  return NextResponse.next()
+}
 
-  // If trying to access admin and not an admin, send to login
-  if (url.pathname.startsWith('/admin') && !isAdmin) {
-    return NextResponse.redirect(new URL('/auth/login', request.url))
-  }
-
-  // If no token and trying to access dashboard
-  if (url.pathname.startsWith('/dashboard') && !token) {
-    return NextResponse.redirect(new URL('/auth/login', request.url))
-  }
+export const config = {
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - api (API routes)
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     */
+    '/((?!api|_next/static|_next/image|favicon.ico).*)',
+  ],
 }
 
 

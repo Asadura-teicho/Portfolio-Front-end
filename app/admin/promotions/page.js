@@ -55,11 +55,13 @@ function PromotionsManagement() {
 const navItems = [
   { id: 'dashboard', label: 'Dashboard Overview', icon: 'dashboard', href: '/admin' },
   { id: 'users', label: 'User Management', icon: 'group', href: '/admin/users' },
-  // { id: 'kyc', label: 'KYC Management', icon: 'badge', href: '/admin/kyc' }, // <-- Added KYC Management
+  { id: 'kyc', label: 'KYC Management', icon: 'badge', href: '/admin/kyc' }, // <-- Added KYC Management
   { id: 'games', label: 'Game Management', icon: 'gamepad', href: '/admin/games' },
   { id: 'betting', label: 'Betting Management', icon: 'sports_soccer', href: '/admin/betting' },
   { id: 'promotions', label: 'Promotions Management', icon: 'campaign', href: '/admin/promotions' },
-  { id: 'finances', label: 'Deposits & Withdrawals', icon: 'paid', href: '/admin/finances' },
+  { id: 'deposits', label: 'Deposits', icon: 'arrow_downward', href: '/admin/deposits' },
+  { id: 'withdrawals', label: 'Withdrawals', icon: 'arrow_upward', href: '/admin/withdrawals' },
+  { id: 'tournaments', label: 'Tournaments', icon: 'emoji_events', href: '/admin/tournaments' },
   { id: 'content', label: 'Content Management', icon: 'wysiwyg', href: '/admin/content' },
 ]
 
@@ -286,8 +288,6 @@ const navItems = [
       <button
         onClick={() => {
           localStorage.removeItem('token')
-          localStorage.removeItem('accessToken')
-          localStorage.removeItem('refreshToken')
           localStorage.removeItem('user')
           localStorage.removeItem('isAdmin')
           localStorage.removeItem('adminEmail')
@@ -568,13 +568,13 @@ const navItems = [
                     className="w-full h-10 rounded-lg bg-white/5 border border-white/10 text-white px-4 focus:outline-none focus:ring-2 focus:ring-[#0dccf2]/50"
                     required
                   >
-                    <option value="welcome" className="bg-[#1E1E2B]">Welcome</option>
-                    <option value="deposit" className="bg-[#1E1E2B]">Deposit</option>
-                    <option value="cashback" className="bg-[#1E1E2B]">Cashback</option>
-                    <option value="reload" className="bg-[#1E1E2B]">Reload</option>
-                    <option value="free_spins" className="bg-[#1E1E2B]">Free Spins</option>
-                    <option value="tournament" className="bg-[#1E1E2B]">Tournament</option>
-                    <option value="other" className="bg-[#1E1E2B]">Other</option>
+                    <option value="welcome" className="bg-[#1E1E2B] text-white">Welcome</option>
+                    <option value="deposit" className="bg-[#1E1E2B] text-white">Deposit</option>
+                    <option value="cashback" className="bg-[#1E1E2B] text-white">Cashback</option>
+                    <option value="reload" className="bg-[#1E1E2B] text-white">Reload</option>
+                    <option value="free_spins" className="bg-[#1E1E2B] text-white">Free Spins</option>
+                    <option value="tournament" className="bg-[#1E1E2B] text-white">Tournament</option>
+                    <option value="other" className="bg-[#1E1E2B] text-white">Other</option>
                   </select>
                 </div>
               </div>

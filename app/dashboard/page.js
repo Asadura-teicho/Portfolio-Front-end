@@ -42,7 +42,6 @@ function DashboardPage() {
     { id: 'bet-history', label: t('dashboard.menuBetHistory'), icon: 'receipt_long', href: '/sports' },
     { id: 'game-history', label: t('dashboard.menuGameHistory'), icon: 'casino', href: '/slots' },
     { id: 'bonuses', label: t('dashboard.menuBonuses'), icon: 'emoji_events', href: '/bonuses' },
-    { id: 'messages', label: t('dashboard.menuMessages'), icon: 'mail', href: '/messages' },
     { id: 'settings', label: t('dashboard.menuSettings'), icon: 'settings', href: '/profile' }
   ]
 
@@ -321,8 +320,8 @@ function DashboardPage() {
 
   return (
     <div className="flex min-h-screen bg-background-light dark:bg-background-dark font-display text-[#EAEAEA]">
-      {/* SideNavBar */}
-      <aside className="w-64 flex-col bg-background-dark border-r border-surface hidden lg:flex">
+      {/* SideNavBar - Fixed */}
+      <aside className="fixed left-0 top-0 h-screen w-64 flex-col bg-background-dark border-r border-surface hidden lg:flex z-50">
         <div className="flex items-center gap-3 px-6 py-5 border-b border-surface">
           <div className="size-8 text-primary">
             <svg fill="currentColor" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
@@ -379,7 +378,7 @@ function DashboardPage() {
       </aside>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col ml-0 lg:ml-64">
         {/* TopNavBar */}
         <header className="flex items-center justify-between whitespace-nowrap border-b border-solid border-surface px-4 sm:px-6 py-3">
           <div className="flex items-center gap-4 text-white">
@@ -412,7 +411,13 @@ function DashboardPage() {
             <Link href="/deposit" className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-primary text-background-dark text-sm font-bold shadow-md hover:brightness-110 transition-all">
               <span className="truncate">{t('common.deposit')}</span>
             </Link>
-            <button className="flex max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 bg-surface text-white gap-2 text-sm font-bold min-w-0 px-2.5 hover:bg-surface/80 transition-colors">
+            <button 
+              onClick={() => {
+                // TODO: Open notifications modal or navigate to notifications page
+                console.log('Notifications clicked')
+              }}
+              className="flex max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 bg-surface text-white gap-2 text-sm font-bold min-w-0 px-2.5 hover:bg-surface/80 transition-colors"
+            >
               <span className="material-symbols-outlined">notifications</span>
             </button>
             {/* Language Switcher */}

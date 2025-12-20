@@ -33,11 +33,13 @@ function BettingManagement() {
 const navItems = [
   { id: 'dashboard', label: 'Dashboard Overview', icon: 'dashboard', href: '/admin' },
   { id: 'users', label: 'User Management', icon: 'group', href: '/admin/users' },
-  // { id: 'kyc', label: 'KYC Management', icon: 'badge', href: '/admin/kyc' }, // <-- Added KYC Management
+  { id: 'kyc', label: 'KYC Management', icon: 'badge', href: '/admin/kyc' }, // <-- Added KYC Management
   { id: 'games', label: 'Game Management', icon: 'gamepad', href: '/admin/games' },
   { id: 'betting', label: 'Betting Management', icon: 'sports_soccer', href: '/admin/betting' },
   { id: 'promotions', label: 'Promotions Management', icon: 'campaign', href: '/admin/promotions' },
-  { id: 'finances', label: 'Deposits & Withdrawals', icon: 'paid', href: '/admin/finances' },
+  { id: 'deposits', label: 'Deposits', icon: 'arrow_downward', href: '/admin/deposits' },
+  { id: 'withdrawals', label: 'Withdrawals', icon: 'arrow_upward', href: '/admin/withdrawals' },
+  { id: 'tournaments', label: 'Tournaments', icon: 'emoji_events', href: '/admin/tournaments' },
   { id: 'content', label: 'Content Management', icon: 'wysiwyg', href: '/admin/content' },
 ]
 
@@ -257,8 +259,6 @@ const navItems = [
       <button
         onClick={() => {
           localStorage.removeItem('token')
-          localStorage.removeItem('accessToken')
-          localStorage.removeItem('refreshToken')
           localStorage.removeItem('user')
           localStorage.removeItem('isAdmin')
           localStorage.removeItem('adminEmail')
@@ -556,7 +556,15 @@ const navItems = [
                                 <span className="material-symbols-outlined">gavel</span>
                               </button>
                             )}
-                            <button className="text-zinc-500 dark:text-[#9cb5ba] hover:text-[#0dccf2] dark:hover:text-[#0dccf2] transition-colors">
+                            <button 
+                              onClick={() => {
+                                // Open bet actions menu (view details, edit, etc.)
+                                console.log('Bet actions menu:', bet._id)
+                                // TODO: Implement dropdown menu or modal
+                              }}
+                              className="text-zinc-500 dark:text-[#9cb5ba] hover:text-[#0dccf2] dark:hover:text-[#0dccf2] transition-colors"
+                              title="More Actions"
+                            >
                               <span className="material-symbols-outlined">more_vert</span>
                             </button>
                           </div>

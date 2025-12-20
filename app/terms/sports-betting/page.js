@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import Navbar from '@/components/Navbar'
+import Footer from '@/components/Footer'
 
 export default function SportsBettingRulesPage() {
   return (
@@ -37,6 +38,7 @@ export default function SportsBettingRulesPage() {
           </div>
         </div>
       </main>
+      <Footer />
     </div>
   )
 }

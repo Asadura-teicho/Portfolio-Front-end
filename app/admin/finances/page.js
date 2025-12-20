@@ -35,15 +35,22 @@ function DepositsWithdrawals() {
   const [minAmount, setMinAmount] = useState('')
   const [maxAmount, setMaxAmount] = useState('')
   const [paymentMethodFilter, setPaymentMethodFilter] = useState('all')
+  const [showIbanModal, setShowIbanModal] = useState(false)
+  const [showBalanceModal, setShowBalanceModal] = useState(false)
+  const [selectedUser, setSelectedUser] = useState(null)
+  const [ibanData, setIbanData] = useState({ iban: '', ibanHolderName: '', bankName: '' })
+  const [balanceData, setBalanceData] = useState({ amount: '', type: 'add', description: '' })
 
 const navItems = [
   { id: 'dashboard', label: 'Dashboard Overview', icon: 'dashboard', href: '/admin' },
   { id: 'users', label: 'User Management', icon: 'group', href: '/admin/users' },
-  // { id: 'kyc', label: 'KYC Management', icon: 'badge', href: '/admin/kyc' }, // <-- Added KYC Management
+  { id: 'kyc', label: 'KYC Management', icon: 'badge', href: '/admin/kyc' },
   { id: 'games', label: 'Game Management', icon: 'gamepad', href: '/admin/games' },
   { id: 'betting', label: 'Betting Management', icon: 'sports_soccer', href: '/admin/betting' },
   { id: 'promotions', label: 'Promotions Management', icon: 'campaign', href: '/admin/promotions' },
-  { id: 'finances', label: 'Deposits & Withdrawals', icon: 'paid', href: '/admin/finances' },
+  { id: 'deposits', label: 'Deposits', icon: 'arrow_downward', href: '/admin/deposits' },
+  { id: 'withdrawals', label: 'Withdrawals', icon: 'arrow_upward', href: '/admin/withdrawals' },
+  { id: 'tournaments', label: 'Tournaments', icon: 'emoji_events', href: '/admin/tournaments' },
   { id: 'content', label: 'Content Management', icon: 'wysiwyg', href: '/admin/content' },
 ]
 
@@ -350,8 +357,6 @@ const navItems = [
       <button
         onClick={() => {
           localStorage.removeItem('token')
-          localStorage.removeItem('accessToken')
-          localStorage.removeItem('refreshToken')
           localStorage.removeItem('user')
           localStorage.removeItem('isAdmin')
           localStorage.removeItem('adminEmail')
@@ -535,18 +540,18 @@ const navItems = [
               <div className="flex items-center gap-4 flex-wrap">
                 <div className="relative">
                   <select
-                    className="appearance-none form-select h-12 w-full lg:w-40 rounded-lg bg-white/5 border-none text-white/80 focus:ring-2 focus:ring-[#0dccf2]/50 pl-4 pr-10"
+                    className="appearance-none form-select h-12 w-full lg:w-40 rounded-lg bg-white/5 border-none text-white focus:ring-2 focus:ring-[#0dccf2]/50 pl-4 pr-10"
                     value={statusFilter}
                     onChange={(e) => {
                       setStatusFilter(e.target.value)
                       setCurrentPage(1)
                     }}
                   >
-                    <option value="Status: All">Durum: Tümü</option>
-                    <option value="pending">Beklemede</option>
-                    <option value="approved">Onaylandı</option>
-                    <option value="rejected">Reddedildi</option>
-                    <option value="cancelled">İptal Edildi</option>
+                    <option value="Status: All" className="bg-[#1E1E2B] text-white">Durum: Tümü</option>
+                    <option value="pending" className="bg-[#1E1E2B] text-white">Beklemede</option>
+                    <option value="approved" className="bg-[#1E1E2B] text-white">Onaylandı</option>
+                    <option value="rejected" className="bg-[#1E1E2B] text-white">Reddedildi</option>
+                    <option value="cancelled" className="bg-[#1E1E2B] text-white">İptal Edildi</option>
                   </select>
                   <span className="material-symbols-outlined text-white/50 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
                     expand_more
@@ -554,18 +559,18 @@ const navItems = [
                 </div>
                 <div className="relative">
                   <select
-                    className="appearance-none form-select h-12 w-full lg:w-40 rounded-lg bg-white/5 border-none text-white/80 focus:ring-2 focus:ring-[#0dccf2]/50 pl-4 pr-10"
+                    className="appearance-none form-select h-12 w-full lg:w-40 rounded-lg bg-white/5 border-none text-white focus:ring-2 focus:ring-[#0dccf2]/50 pl-4 pr-10"
                     value={paymentMethodFilter}
                     onChange={(e) => {
                       setPaymentMethodFilter(e.target.value)
                       setCurrentPage(1)
                     }}
                   >
-                    <option value="all">Payment: All</option>
-                    <option value="IBAN">IBAN</option>
-                    <option value="Banka Havalesi">Banka Havalesi</option>
-                    <option value="Papara">Papara</option>
-                    <option value="Credit Card">Credit Card</option>
+                    <option value="all" className="bg-[#1E1E2B] text-white">Payment: All</option>
+                    <option value="IBAN" className="bg-[#1E1E2B] text-white">IBAN</option>
+                    <option value="Banka Havalesi" className="bg-[#1E1E2B] text-white">Banka Havalesi</option>
+                    <option value="Papara" className="bg-[#1E1E2B] text-white">Papara</option>
+                    <option value="Credit Card" className="bg-[#1E1E2B] text-white">Credit Card</option>
                   </select>
                   <span className="material-symbols-outlined text-white/50 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
                     expand_more
@@ -691,7 +696,7 @@ const navItems = [
                           </td>
                           <td className="px-6 py-4">
                             {item.status === 'pending' ? (
-                              <div className="flex items-center justify-center gap-2">
+                              <div className="flex items-center justify-center gap-2 flex-wrap">
                                 <button
                                   onClick={() => {
                                     setSelectedItem(item)
@@ -715,6 +720,36 @@ const navItems = [
                                   >
                                     İptal
                                   </button>
+                                )}
+                                {activeTab === 'withdrawals' && (
+                                  <>
+                                    <button
+                                      onClick={() => {
+                                        setSelectedUser(item.user?._id || item.user)
+                                        setIbanData({
+                                          iban: item.iban || item.user?.iban || '',
+                                          ibanHolderName: item.ibanHolderName || item.user?.ibanHolderName || '',
+                                          bankName: item.bankName || item.user?.bankName || ''
+                                        })
+                                        setShowIbanModal(true)
+                                      }}
+                                      className="px-3 py-1 text-xs font-bold text-white bg-blue-500/80 rounded-md hover:bg-blue-500 transition-colors"
+                                      title="Edit IBAN"
+                                    >
+                                      IBAN
+                                    </button>
+                                    <button
+                                      onClick={() => {
+                                        setSelectedUser(item.user?._id || item.user)
+                                        setBalanceData({ amount: '', type: 'add', description: '' })
+                                        setShowBalanceModal(true)
+                                      }}
+                                      className="px-3 py-1 text-xs font-bold text-white bg-purple-500/80 rounded-md hover:bg-purple-500 transition-colors"
+                                      title="Update Balance"
+                                    >
+                                      Bakiye
+                                    </button>
+                                  </>
                                 )}
                               </div>
                             ) : (
@@ -812,6 +847,165 @@ const navItems = [
                 className="flex-1 px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
               >
                 İptal
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* IBAN Edit Modal */}
+      {showIbanModal && selectedUser && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-[#1E1E2B] rounded-xl p-6 max-w-md w-full mx-4 border border-white/10">
+            <h3 className="text-white text-xl font-bold mb-4">Edit User IBAN</h3>
+            <div className="mb-4">
+              <p className="text-white/70 text-sm mb-2">
+                User: {typeof selectedUser === 'object' ? (selectedUser.username || selectedUser.email) : 'N/A'}
+              </p>
+            </div>
+            <div className="mb-4">
+              <label className="block text-white/70 text-sm mb-2">IBAN *</label>
+              <input
+                type="text"
+                value={ibanData.iban}
+                onChange={(e) => setIbanData({ ...ibanData, iban: e.target.value })}
+                className="w-full h-12 rounded-lg bg-white/5 border border-white/10 text-white px-4 focus:outline-none focus:ring-2 focus:ring-[#0dccf2]/50"
+                placeholder="TR00 0000 0000 0000 0000 0000 00"
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-white/70 text-sm mb-2">IBAN Holder Name *</label>
+              <input
+                type="text"
+                value={ibanData.ibanHolderName}
+                onChange={(e) => setIbanData({ ...ibanData, ibanHolderName: e.target.value })}
+                className="w-full h-12 rounded-lg bg-white/5 border border-white/10 text-white px-4 focus:outline-none focus:ring-2 focus:ring-[#0dccf2]/50"
+                placeholder="Account Holder Name"
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-white/70 text-sm mb-2">Bank Name (Optional)</label>
+              <input
+                type="text"
+                value={ibanData.bankName}
+                onChange={(e) => setIbanData({ ...ibanData, bankName: e.target.value })}
+                className="w-full h-12 rounded-lg bg-white/5 border border-white/10 text-white px-4 focus:outline-none focus:ring-2 focus:ring-[#0dccf2]/50"
+                placeholder="Bank Name"
+              />
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={async () => {
+                  try {
+                    const userId = typeof selectedUser === 'object' ? selectedUser._id : selectedUser
+                    await adminAPI.updateUserIban(userId, ibanData)
+                    setSuccess('IBAN updated successfully')
+                    setShowIbanModal(false)
+                    setSelectedUser(null)
+                    setIbanData({ iban: '', ibanHolderName: '', bankName: '' })
+                    fetchData()
+                    setTimeout(() => setSuccess(''), 3000)
+                  } catch (err) {
+                    setError(err.response?.data?.message || 'Failed to update IBAN')
+                  }
+                }}
+                disabled={!ibanData.iban || !ibanData.ibanHolderName}
+                className="flex-1 px-4 py-2 bg-[#0dccf2] text-white rounded-lg hover:bg-[#0dccf2]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Update IBAN
+              </button>
+              <button
+                onClick={() => {
+                  setShowIbanModal(false)
+                  setSelectedUser(null)
+                  setIbanData({ iban: '', ibanHolderName: '', bankName: '' })
+                }}
+                className="flex-1 px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Balance Update Modal */}
+      {showBalanceModal && selectedUser && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-[#1E1E2B] rounded-xl p-6 max-w-md w-full mx-4 border border-white/10">
+            <h3 className="text-white text-xl font-bold mb-4">Update User Balance</h3>
+            <div className="mb-4">
+              <p className="text-white/70 text-sm mb-2">
+                User: {typeof selectedUser === 'object' ? (selectedUser.username || selectedUser.email) : 'N/A'}
+              </p>
+              {typeof selectedUser === 'object' && selectedUser.balance !== undefined && (
+                <p className="text-white/70 text-sm mb-2">
+                  Current Balance: ₺{selectedUser.balance?.toFixed(2) || '0.00'}
+                </p>
+              )}
+            </div>
+            <div className="mb-4">
+              <label className="block text-white/70 text-sm mb-2">Amount *</label>
+              <input
+                type="number"
+                value={balanceData.amount}
+                onChange={(e) => setBalanceData({ ...balanceData, amount: e.target.value })}
+                className="w-full h-12 rounded-lg bg-white/5 border border-white/10 text-white px-4 focus:outline-none focus:ring-2 focus:ring-[#0dccf2]/50"
+                placeholder="0.00"
+                min="0"
+                step="0.01"
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-white/70 text-sm mb-2">Type *</label>
+              <select
+                value={balanceData.type}
+                onChange={(e) => setBalanceData({ ...balanceData, type: e.target.value })}
+                className="w-full h-12 rounded-lg bg-white/5 border border-white/10 text-white px-4 focus:outline-none focus:ring-2 focus:ring-[#0dccf2]/50"
+              >
+                <option value="add">Add (Credit)</option>
+                <option value="subtract">Subtract (Debit)</option>
+              </select>
+            </div>
+            <div className="mb-4">
+              <label className="block text-white/70 text-sm mb-2">Description (Optional)</label>
+              <textarea
+                value={balanceData.description}
+                onChange={(e) => setBalanceData({ ...balanceData, description: e.target.value })}
+                className="w-full h-24 rounded-lg bg-white/5 border border-white/10 text-white p-3 focus:outline-none focus:ring-2 focus:ring-[#0dccf2]/50"
+                placeholder="Transaction description..."
+              />
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={async () => {
+                  try {
+                    const userId = typeof selectedUser === 'object' ? selectedUser._id : selectedUser
+                    await adminAPI.updateUserBalance(userId, balanceData)
+                    setSuccess(`Balance ${balanceData.type === 'add' ? 'added' : 'subtracted'} successfully`)
+                    setShowBalanceModal(false)
+                    setSelectedUser(null)
+                    setBalanceData({ amount: '', type: 'add', description: '' })
+                    fetchData()
+                    setTimeout(() => setSuccess(''), 3000)
+                  } catch (err) {
+                    setError(err.response?.data?.message || 'Failed to update balance')
+                  }
+                }}
+                disabled={!balanceData.amount || parseFloat(balanceData.amount) <= 0}
+                className="flex-1 px-4 py-2 bg-[#0dccf2] text-white rounded-lg hover:bg-[#0dccf2]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Update Balance
+              </button>
+              <button
+                onClick={() => {
+                  setShowBalanceModal(false)
+                  setSelectedUser(null)
+                  setBalanceData({ amount: '', type: 'add', description: '' })
+                }}
+                className="flex-1 px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+              >
+                Cancel
               </button>
             </div>
           </div>

@@ -136,11 +136,13 @@ function SettingsPage() {
 const navItems = [
   { id: 'dashboard', label: 'Dashboard Overview', icon: 'dashboard', href: '/admin' },
   { id: 'users', label: 'User Management', icon: 'group', href: '/admin/users' },
-  // { id: 'kyc', label: 'KYC Management', icon: 'badge', href: '/admin/kyc' }, // <-- Added KYC Management
+  { id: 'kyc', label: 'KYC Management', icon: 'badge', href: '/admin/kyc' }, // <-- Added KYC Management
   { id: 'games', label: 'Game Management', icon: 'gamepad', href: '/admin/games' },
   { id: 'betting', label: 'Betting Management', icon: 'sports_soccer', href: '/admin/betting' },
   { id: 'promotions', label: 'Promotions Management', icon: 'campaign', href: '/admin/promotions' },
-  { id: 'finances', label: 'Deposits & Withdrawals', icon: 'paid', href: '/admin/finances' },
+  { id: 'deposits', label: 'Deposits', icon: 'arrow_downward', href: '/admin/deposits' },
+  { id: 'withdrawals', label: 'Withdrawals', icon: 'arrow_upward', href: '/admin/withdrawals' },
+  { id: 'tournaments', label: 'Tournaments', icon: 'emoji_events', href: '/admin/tournaments' },
   { id: 'content', label: 'Content Management', icon: 'wysiwyg', href: '/admin/content' },
 ]
 
@@ -190,8 +192,6 @@ const navItems = [
       <button
         onClick={() => {
           localStorage.removeItem('token')
-          localStorage.removeItem('accessToken')
-          localStorage.removeItem('refreshToken')
           localStorage.removeItem('user')
           localStorage.removeItem('isAdmin')
           localStorage.removeItem('adminEmail')
@@ -459,9 +459,9 @@ const navItems = [
                       onChange={(e) => setSettings({...settings, currency: e.target.value})}
                       className="w-full h-12 rounded-lg bg-white/5 border border-white/10 text-white px-4 focus:outline-none focus:ring-2 focus:ring-[#0dccf2]/50"
                     >
-                      <option value="TRY" className="bg-[#1E1E2B]">TRY (₺)</option>
-                      <option value="USD" className="bg-[#1E1E2B]">USD ($)</option>
-                      <option value="EUR" className="bg-[#1E1E2B]">EUR (€)</option>
+                      <option value="TRY" className="bg-[#1E1E2B] text-white">TRY (₺)</option>
+                      <option value="USD" className="bg-[#1E1E2B] text-white">USD ($)</option>
+                      <option value="EUR" className="bg-[#1E1E2B] text-white">EUR (€)</option>
                     </select>
                   </div>
 

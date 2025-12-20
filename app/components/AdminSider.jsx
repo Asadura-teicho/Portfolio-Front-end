@@ -23,8 +23,6 @@ export default function AdminDashboard() {
 
   const handleLogout = () => {
     localStorage.removeItem('token')
-    localStorage.removeItem('accessToken')
-    localStorage.removeItem('refreshToken')
     localStorage.removeItem('user')
     localStorage.removeItem('isAdmin')
     localStorage.removeItem('adminEmail')

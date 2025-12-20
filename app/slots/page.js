@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Navbar from '@/components/Navbar'
 import { useTranslation } from '@/hooks/useTranslation'
@@ -219,7 +220,15 @@ export default function SlotsPage() {
                     </div>
                   )}
                   <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-200 flex items-center justify-center">
-                    <button className="opacity-0 group-hover:opacity-100 bg-primary text-black px-4 py-2 rounded-lg font-bold text-sm transition-all duration-200 transform translate-y-2 group-hover:translate-y-0">
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        // TODO: Launch game or navigate to game page
+                        console.log('Play game:', game.name)
+                        // Example: router.push(`/games/${game.id}`)
+                      }}
+                      className="opacity-0 group-hover:opacity-100 bg-primary text-black px-4 py-2 rounded-lg font-bold text-sm transition-all duration-200 transform translate-y-2 group-hover:translate-y-0 hover:bg-yellow-400"
+                    >
                       PLAY
                     </button>
                   </div>

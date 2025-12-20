@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Navbar from '@/components/Navbar'
+import Footer from '@/components/Footer'
 import { useTranslation } from '@/hooks/useTranslation'
 import { supportAPI } from '@/lib/api'
 import { isAuthenticated, getCurrentUser } from '@/utils/auth'
@@ -153,6 +154,7 @@ export default function ContactPage() {
           </div>
         </div>
       </main>
+      <Footer />
     </div>
   )
 }

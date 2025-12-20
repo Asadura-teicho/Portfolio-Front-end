@@ -25,12 +25,6 @@ function BonusesPage() {
       }
 
       try {
-        const token = localStorage.getItem('token')
-        if (!token) {
-          setLoading(false)
-          return
-        }
-
         const response = await bonusAPI.getMyBonuses()
         if (response.data) {
           setBonuses(response.data.bonuses || [])
