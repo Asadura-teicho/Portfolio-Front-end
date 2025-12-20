@@ -27,23 +27,23 @@
 //   ],
 // }
 
-// import { NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 
-// export function middleware(request) {
-//   const token = request.cookies.get('accessToken')
-//   const isAdmin = request.cookies.get('isAdmin')?.value === 'true'
-//   const url = request.nextUrl.clone()
+export function middleware(request) {
+  const token = request.cookies.get('accessToken')
+  const isAdmin = request.cookies.get('isAdmin')?.value === 'true'
+  const url = request.nextUrl.clone()
 
-//   // If trying to access admin and not an admin, send to login
-//   if (url.pathname.startsWith('/admin') && !isAdmin) {
-//     return NextResponse.redirect(new URL('/auth/login', request.url))
-//   }
+  // If trying to access admin and not an admin, send to login
+  if (url.pathname.startsWith('/admin') && !isAdmin) {
+    return NextResponse.redirect(new URL('/auth/login', request.url))
+  }
 
-//   // If no token and trying to access dashboard
-//   if (url.pathname.startsWith('/dashboard') && !token) {
-//     return NextResponse.redirect(new URL('/auth/login', request.url))
-//   }
-// }
+  // If no token and trying to access dashboard
+  if (url.pathname.startsWith('/dashboard') && !token) {
+    return NextResponse.redirect(new URL('/auth/login', request.url))
+  }
+}
 
 
 
@@ -85,36 +85,36 @@
 //     '/((?!api|_next/static|_next/image|favicon.ico).*)',
 //   ],
 // }
-import { NextResponse } from 'next/server'
+// import { NextResponse } from 'next/server'
 
-export function middleware(request) {
-  // Use optional chaining and default values
-  const token = request.cookies.get('accessToken')?.value || null
-  const isAdmin = request.cookies.get('isAdmin')?.value === 'true'
+// export function middleware(request) {
+//   // Use optional chaining and default values
+//   const token = request.cookies.get('accessToken')?.value || null
+//   const isAdmin = request.cookies.get('isAdmin')?.value === 'true'
 
-  const url = request.nextUrl.clone()
-  const nextParam = encodeURIComponent(`${url.pathname}${url.search}`)
+//   const url = request.nextUrl.clone()
+//   const nextParam = encodeURIComponent(`${url.pathname}${url.search}`)
 
-  // Admin routes
-  if (url.pathname.startsWith('/admin')) {
-    if (!token) {
-      return NextResponse.redirect(new URL(`/auth/login?next=${nextParam}`, request.url))
-    }
-    if (!isAdmin) {
-      return NextResponse.redirect(new URL('/dashboard', request.url))
-    }
-  }
+//   // Admin routes
+//   if (url.pathname.startsWith('/admin')) {
+//     if (!token) {
+//       return NextResponse.redirect(new URL(`/auth/login?next=${nextParam}`, request.url))
+//     }
+//     if (!isAdmin) {
+//       return NextResponse.redirect(new URL('/dashboard', request.url))
+//     }
+//   }
 
-  // Dashboard routes
-  if (url.pathname.startsWith('/dashboard') && !token) {
-    return NextResponse.redirect(new URL(`/auth/login?next=${nextParam}`, request.url))
-  }
+//   // Dashboard routes
+//   if (url.pathname.startsWith('/dashboard') && !token) {
+//     return NextResponse.redirect(new URL(`/auth/login?next=${nextParam}`, request.url))
+//   }
 
-  return NextResponse.next()
-}
+//   return NextResponse.next()
+// }
 
-export const config = {
-  matcher: [
-    '/((?!api|_next/static|_next/image|favicon.ico).*)',
-  ],
-}
+// export const config = {
+//   matcher: [
+//     '/((?!api|_next/static|_next/image|favicon.ico).*)',
+//   ],
+// }

@@ -57,9 +57,9 @@ export default function HomePage() {
               {/* Hero Banner */}
               <div className="px-4 sm:px-6 lg:px-8 py-10">
                 <div 
-                  className="flex min-h-[360px] flex-col gap-6 bg-cover bg-center bg-no-repeat rounded-lg items-start justify-center p-8 md:p-12 text-left"
+                  className="flex min-h-[460px] flex-col gap-6 bg-cover bg-center bg-no-repeat rounded-lg items-start justify-center p-8 md:p-12 text-left"
                   style={{
-                    backgroundImage: `linear-gradient(90deg, rgba(21, 19, 40, 0.9) 0%, rgba(21, 19, 40, 0.1) 100%), url("https://lh3.googleusercontent.com/aida-public/AB6AXuCCaW01L4T3L4vB9SKeAiplpugvMelUYglA8Ys4HZnsgqE866WX7EuR44XBlYYC6CB1GWt2OMC0T8xwxGdg3x99VyETmtUmgSRIb0zWF-OTHr-VeeLaRVqskQMO8hhKZPUkZr33eBFaKOs5mSKft1l-b-xVMwQPyjyrma0B3tqB8FZG3eF1JMs5IADQcqI1iUJ8GDkOGFm80w9pEV85nfxxFX11q67jhbbW3r1x_e9XwFAqr9YAlGB6oKVOSxz1bLm69LvclLXRrHY")`
+                    backgroundImage: `linear-gradient(90deg, rgba(21, 19, 40, 0.9) 0%, rgba(21, 19, 40, 0.1) 100%), url("./banner.jpg")`
                   }}
                 >
                   <div className="flex flex-col gap-4 max-w-md">

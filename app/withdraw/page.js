@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import Navbar from '@/components/Navbar'
 import { useTranslation } from '@/hooks/useTranslation'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import { paymentAPI, authAPI } from '@/lib/api'
@@ -178,7 +177,6 @@ function WithdrawPage() {
 
   return (
     <div className="relative flex min-h-screen w-full flex-col bg-background-dark font-display text-[#EAEAEA]">
-      <Navbar />
 
       {/* Main Content */}
       <main className="flex-grow">

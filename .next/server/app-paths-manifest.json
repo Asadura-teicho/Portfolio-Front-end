@@ -1,0 +1,7 @@
+{
+  "/deposit/page": "app/deposit/page.js",
+  "/tv-games/page": "app/tv-games/page.js",
+  "/profile/page": "app/profile/page.js",
+  "/sports/page": "app/sports/page.js",
+  "/withdraw/page": "app/withdraw/page.js"
+}
